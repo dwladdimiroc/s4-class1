@@ -78,8 +78,8 @@ public class Topology extends App {
 				}, threePE).setParallelism(16);
 
 		// Setting DownStream in App
-		processOnePE.setDownStream(twoStream);
-		processTwoPE.setDownStream(threeStream);
+		onePE.setDownStream(twoStream);
+		twoPE.setDownStream(threeStream);
 	}
 
 	@Override
