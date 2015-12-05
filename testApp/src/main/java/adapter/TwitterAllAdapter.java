@@ -137,9 +137,6 @@ public class TwitterAllAdapter extends AdapterApp implements Runnable {
 		while(true){
 
 			try {
-				Configuration configuration = new Configuration();
-				configuration.settingPE(1);
-
 				Status status = this.messageQueue.take();
 
 				Event event = new Event();
@@ -168,7 +165,11 @@ public class TwitterAllAdapter extends AdapterApp implements Runnable {
 				
 
 				eventCount++;
-				event.put("levelTweet", Integer.class, eventCount % configuration.getReplication());
+				// cantReplicas: Cantidad de PEs que se quieren generar para el proximo operador
+				// Nota: recuerden que la topología no necesariamente debía ser de este estilo
+				// también podía ser por un hash
+				int cantReplicas = 10;
+				event.put("levelTweet", Integer.class, eventCount % cantReplicas);
 
 				event.put("id", Integer.class, eventCount);
 				event.put("tweet", Tweet.class, tweet);

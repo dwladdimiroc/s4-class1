@@ -24,10 +24,9 @@ import org.apache.s4.core.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import utilities.MongoConnection;
 
 public class OnePE extends ProcessingElement {
-	private static Logger logger = LoggerFactory.getLogger(ProcessOnePE.class);
+	private static Logger logger = LoggerFactory.getLogger(OnePE.class);
 	private boolean showEvent = false;
 
 	Stream<Event> downStream;

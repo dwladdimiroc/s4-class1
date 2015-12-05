@@ -25,7 +25,6 @@ import org.apache.s4.core.adapter.AdapterApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eda.Configuration;
 import eda.Tweet;
 
 import twitter4j.FilterQuery;
@@ -115,19 +114,11 @@ public class TwitterKeywordsAdapter extends AdapterApp implements Runnable {
 		};
 
 		FilterQuery fq = new FilterQuery();
-		Configuration configuration = new Configuration();
-		configuration.setAdapter(true);
-		configuration.settingPE(1);
-
-		//String keywords[] = configuration.getTrack();
-
-		System.out.print("Arrays string: ");
-		System.out.print(configuration.getTrack());
-		System.out.println(Arrays.toString(configuration.getTrack()));
 
 		//System.out.println(Arrays.toString(configuration.getTrack()));
 
-		fq.track(configuration.getTrack());
+		//Elige todos los tweets que posean esas palabras claves
+		fq.track(new String[]{"palabra1,palabra2,palabra3"});
 		//fq.track(keywords);
 		twitterStream.addListener(statusListener);
 		twitterStream.filter(fq);
@@ -149,8 +140,6 @@ public class TwitterKeywordsAdapter extends AdapterApp implements Runnable {
 
 		while (true) {
 			try {
-				Configuration configuration = new Configuration();
-				configuration.settingPE(1);
 				
 				Status status = this.messageQueue.take();
 
@@ -166,7 +155,11 @@ public class TwitterKeywordsAdapter extends AdapterApp implements Runnable {
 						status.getRetweetCount(), status.getGeoLocation());
 				
 				eventCount++;
-				event.put("levelTweet", Integer.class, eventCount % configuration.getReplication());
+				// cantReplicas: Cantidad de PEs que se quieren generar para el proximo operador
+				// Nota: recuerden que la topología no necesariamente debía ser de este estilo
+				// también podía ser por un hash
+				int cantReplicas = 10;
+				event.put("levelTweet", Integer.class, eventCount % cantReplicas);
 				event.put("id", Integer.class, eventCount);
 				event.put("tweet", Tweet.class, tweet);
 

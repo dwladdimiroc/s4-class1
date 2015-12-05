@@ -23,11 +23,10 @@ import org.apache.s4.core.adapter.AdapterApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import processElements.ProcessOnePE;
-
 public class Adapter extends AdapterApp implements Runnable {
 	private static Logger logger = LoggerFactory.getLogger(Adapter.class);
 	private boolean showEvent = false;
+	Thread thread;
 
 	@Override
 	protected void onInit() {

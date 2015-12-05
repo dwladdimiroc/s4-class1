@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ThreePE extends ProcessingElement {
-	private static Logger logger = LoggerFactory.getLogger(MongoPE.class);
+	private static Logger logger = LoggerFactory.getLogger(ThreePE.class);
 	private boolean showEvent = false;
 
 	public void onEvent(Event event) {

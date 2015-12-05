@@ -25,7 +25,6 @@ import org.apache.s4.core.adapter.AdapterApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eda.Configuration;
 import eda.Tweet;
 
 import twitter4j.FilterQuery;
@@ -41,12 +40,11 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 
-	private static Logger logger = LoggerFactory
-			.getLogger(TwitterLocationAdapter.class);
+	private static Logger logger = LoggerFactory.getLogger(TwitterLocationAdapter.class);
 
 	private LinkedBlockingQueue<Status> messageQueue = new LinkedBlockingQueue<Status>();
 	private Thread t;
-	
+
 	public int eventCount = 0;
 
 	@Override
@@ -61,8 +59,7 @@ public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 		Properties twitterProperties = new Properties();
 		File twitter4jPropsFile = new File("../twitter4j.properties");
 		if (!twitter4jPropsFile.exists()) {
-			logger.error(
-					"Cannot find twitter4j.properties file in this location :[{}]",
+			logger.error("Cannot find twitter4j.properties file in this location :[{}]",
 					twitter4jPropsFile.getAbsolutePath());
 			return;
 		}
@@ -71,21 +68,16 @@ public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 
 		cb = new ConfigurationBuilder();
 
-		cb.setOAuthConsumerKey(twitterProperties
-				.getProperty("oauth.consumerKey"));
-		cb.setOAuthConsumerSecret(twitterProperties
-				.getProperty("oauth.consumerSecret"));
-		cb.setOAuthAccessToken(twitterProperties
-				.getProperty("oauth.accessToken"));
-		cb.setOAuthAccessTokenSecret(twitterProperties
-				.getProperty("oauth.accessTokenSecret"));
+		cb.setOAuthConsumerKey(twitterProperties.getProperty("oauth.consumerKey"));
+		cb.setOAuthConsumerSecret(twitterProperties.getProperty("oauth.consumerSecret"));
+		cb.setOAuthAccessToken(twitterProperties.getProperty("oauth.accessToken"));
+		cb.setOAuthAccessTokenSecret(twitterProperties.getProperty("oauth.accessTokenSecret"));
 
 		cb.setDebugEnabled(false);
 		cb.setPrettyDebugEnabled(false);
 		cb.setIncludeMyRetweetEnabled(false);
 
-		TwitterStream twitterStream = new TwitterStreamFactory(cb.build())
-				.getInstance();
+		TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
 
 		StatusListener statusListener = new StatusListener() {
 			@Override
@@ -106,8 +98,7 @@ public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 			}
 
 			@Override
-			public void onDeletionNotice(
-					StatusDeletionNotice statusDeletionNotice) {
+			public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
 			}
 
 			@Override
@@ -117,15 +108,11 @@ public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 		};
 
 		FilterQuery fq = new FilterQuery();
-		Configuration configuration = new Configuration();
-		configuration.settingPE(1);
-		double position[][] = {
-				{ configuration.getGeolocationInit()[0],
-						configuration.getGeolocationInit()[1] },
-				{ configuration.getGeolocationFinal()[0],
-						configuration.getGeolocationFinal()[1] } };
+		// Posiciones geográficas, esas dos coordenadas son el vértice superior izquierda e inferior derecho
+		// de un rectangulo, de tal manera de analizar solo una parte geografica
+		double position[][] = { { 0.0, 0.0 }, { 0.0, 0.0 } };
 		fq.locations(position);
-		
+
 		twitterStream.addListener(statusListener);
 		twitterStream.filter(fq);
 	}
@@ -146,24 +133,24 @@ public class TwitterLocationAdapter extends AdapterApp implements Runnable {
 
 		while (true) {
 			try {
-				Configuration configuration = new Configuration();
-				configuration.settingPE(1);
-				
 				Status status = this.messageQueue.take();
 
 				Event event = new Event();
 
-				Tweet tweet = new Tweet(status.getId(), status.getText(),
-						status.getCreatedAt(), status.getPlace(), status
-								.getUser().getScreenName(), status.getUser()
-								.getLang(), status.getUser()
-								.getFollowersCount(), status.getUser()
-								.getFriendsCount(),
-						status.getHashtagEntities(), status.getFavoriteCount(),
-						status.getRetweetCount(), status.getGeoLocation());
-				
+				Tweet tweet = new Tweet(status.getId(), status.getText(), status.getCreatedAt(), status.getPlace(),
+						status.getUser().getScreenName(), status.getUser().getLang(),
+						status.getUser().getFollowersCount(), status.getUser().getFriendsCount(),
+						status.getHashtagEntities(), status.getFavoriteCount(), status.getRetweetCount(),
+						status.getGeoLocation());
+
 				eventCount++;
-				event.put("levelTweet", Integer.class, eventCount % configuration.getReplication());
+				// cantReplicas: Cantidad de PEs que se quieren generar para el
+				// proximo operador
+				// Nota: recuerden que la topología no necesariamente debía ser
+				// de este estilo
+				// también podía ser por un hash
+				int cantReplicas = 10;
+				event.put("levelTweet", Integer.class, eventCount % cantReplicas);
 				event.put("id", Integer.class, eventCount);
 				event.put("tweet", Tweet.class, tweet);
 
